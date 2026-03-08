@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización {{ cotizacion.numero }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            @page { margin: 1cm; size: letter; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white !important; }
+            .no-print { display: none !important; }
+            .shadow-lg { box-shadow: none !important; border: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 font-sans text-gray-800">
+    <div class="max-w-4xl mx-auto bg-white p-10 shadow-lg no-print:my-8 border border-gray-200">
+        
+        <div class="text-right mb-6 no-print">
+            <button onclick="window.print()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-blue-700 font-bold tracking-wide flex items-center gap-2 inline-flex">
+                Imprimir / Guardar PDF
+            </button>
+        </div>
+
+        <div class="flex justify-between items-start border-b-2 border-gray-800 pb-6 mb-6">
+            <div class="w-1/2">
+                <img src="/static/PakChile_2.png" alt="PakChile Logo" class="h-16 mb-4 object-contain">
+                <h2 class="font-bold text-lg text-gray-900">PakChile Logística y Distribución</h2>
+                <p class="text-sm text-gray-600 font-medium mt-1">RUT: 76.320.328-K</p>
+                <p class="text-sm text-gray-600">Ruiz Tagle 287, Estación Central</p>
+                <p class="text-sm text-gray-600">Teléfono: +56 9 2990 7216</p>
+            </div>
+            <div class="w-1/2 text-right">
+                <h1 class="text-4xl font-black text-gray-800 tracking-widest uppercase mb-2">Cotización</h1>
+                <p class="text-2xl font-bold text-red-600">{{ cotizacion.numero }}</p>
+                <div class="mt-4 text-sm text-gray-600">
+                    <p><span class="font-bold text-gray-800 uppercase">Fecha:</span> {{ cotizacion.fecha }}</p>
+                    <p><span class="font-bold text-gray-800 uppercase">Válida hasta:</span> {{ cotizacion.valida_hasta }}</p>
+                    <p><span class="font-bold text-gray-800 uppercase">Tipo Doc:</span> {{ cotizacion.tipo_documento or 'Cotización' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-5 mb-8 border border-gray-200">
+            <h3 class="font-bold text-gray-800 border-b border-gray-200 pb-2 mb-3 uppercase tracking-wider text-sm">Datos del Cliente</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="mb-1"><span class="font-bold text-gray-700">Señor(es):</span> {{ cotizacion.cliente_nombre }}</p>
+                    <p><span class="font-bold text-gray-700">RUT:</span> {{ cotizacion.cliente_rut or 'No registrado' }}</p>
+                </div>
+                <div>
+                    <p class="mb-1"><span class="font-bold text-gray-700">Dirección:</span> {{ cotizacion.cliente_direccion or 'No registrada' }} {{ cotizacion.cliente_comuna }}</p>
+                    <p><span class="font-bold text-gray-700">Teléfono:</span> {{ cotizacion.cliente_telefono or 'No registrado' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <table class="w-full text-left border-collapse mb-8 text-sm">
+            <thead>
+                <tr class="bg-gray-800 text-white uppercase text-xs tracking-wider">
+                    <th class="py-3 px-4 rounded-tl-lg font-semibold w-20 text-center">Cant.</th>
+                    <th class="py-3 px-4 font-semibold">Descripción del Producto</th>
+                    <th class="py-3 px-4 text-right font-semibold w-32">P. Unitario</th>
+                    <th class="py-3 px-4 text-right rounded-tr-lg font-semibold w-32">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for item in cotizacion.detalle %}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-4 font-bold text-gray-900 text-center">{{ item.cantidad|string|replace('.00', '')|replace('.0', '') }}</td>
+                    <td class="py-3 px-4 text-gray-800 font-medium">{{ item.nombre }}</td>
+                    <td class="py-3 px-4 text-right text-gray-600">${{ "{:,}".format(item.precio_unitario).replace(',', '.') }}</td>
+                    <td class="py-3 px-4 text-right font-bold text-gray-900">${{ "{:,}".format(item.subtotal).replace(',', '.') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="flex justify-end">
+            <div class="w-2/5 bg-gray-50 p-5 rounded-lg border border-gray-200 text-sm">
+                <div class="flex justify-between mb-2 text-gray-600">
+                    <span class="font-bold">Subtotal Neto:</span>
+                    <span>${{ "{:,}".format(cotizacion.subtotal).replace(',', '.') }}</span>
+                </div>
+                <div class="flex justify-between mb-3 text-gray-600">
+                    <span class="font-bold">IVA (19%):</span>
+                    <span>${{ "{:,}".format(cotizacion.iva).replace(',', '.') }}</span>
+                </div>
+                <div class="flex justify-between border-t border-gray-300 pt-3 text-xl font-black text-gray-900">
+                    <span>TOTAL:</span>
+                    <span>${{ "{:,}".format(cotizacion.total).replace(',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 pt-6 border-t border-gray-200 text-center text-xs text-gray-400">
+            <p class="font-bold">Documento generado por Sistema PakChile - www.pakchile.cl</p>
+            <p class="mt-1">Esta cotización es válida por los días estipulados en este documento y está sujeta a disponibilidad de stock.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Imprime automáticamente al cargar
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

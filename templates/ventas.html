@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}Ventas{% endblock %}
+
+{% block content %}
+<div x-data="{ busqueda: '', filtroEstado: '', filtroPago: '' }" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex gap-4 w-2/3">
+            <div class="relative w-1/2">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" x-model="busqueda" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Buscar por número o cliente...">
+            </div>
+            <div class="w-1/4">
+                <select x-model="filtroEstado" class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
+                    <option value="">Estado</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Completada">Completada</option>
+                </select>
+            </div>
+            <div class="w-1/4">
+                <select x-model="filtroPago" class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
+                    <option value="">Pago</option>
+                    <option value="Sin Pagar">Sin Pagar</option>
+                    <option value="Pagado">Pagado</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <a href="/venta/nueva" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-md transition-all active:scale-95">
+                <i class="fa-solid fa-plus"></i> Nueva Venta
+            </a>
+        </div>
+    </div>
+
+    <div class="overflow-visible min-h-[250px] pb-24">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] tracking-wider font-bold">
+                <tr>
+                    <th class="px-6 py-4 text-left">N°</th>
+                    <th class="px-6 py-4 text-left">Cliente</th>
+                    <th class="px-6 py-4 text-left">Fecha</th>
+                    <th class="px-6 py-4 text-left">Total</th>
+                    <th class="px-6 py-4 text-left">Abonos</th>
+                    <th class="px-6 py-4 text-center">Pago</th>
+                    <th class="px-6 py-4 text-center">Estado</th>
+                    <th class="px-6 py-4 text-center">Despacho</th>
+                    {% if session['usuario_rol'] == 'Administrador' %}
+                    <th class="px-6 py-4 text-left">Vendedor</th>
+                    {% endif %}
+                    <th class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for v in ventas %}
+                <tr x-data="{ menuVta: false }" 
+                    x-show="(busqueda === '' || ('{{ v.numero }} {{ v.cliente_nombre }}').toLowerCase().includes(busqueda.toLowerCase())) && (filtroEstado === '' || '{{ v.estado }}' === filtroEstado) && (filtroPago === '' || '{{ v.estado_pago }}' === filtroPago)"
+                    class="hover:bg-gray-50 transition-colors">
+                    
+                    <td class="px-6 py-4 text-gray-500 font-medium">{{ v.numero }}</td>
+                    <td class="px-6 py-4 font-bold text-gray-900">{{ v.cliente_nombre }}</td>
+                    <td class="px-6 py-4 text-gray-500">{{ v.fecha }}</td>
+                    <td class="px-6 py-4 font-bold text-gray-900">${{ "{:,}".format(v.total).replace(',', '.') }}</td>
+                    
+                    <td class="px-6 py-4 font-bold text-green-600">${{ "{:,}".format(v.total_abonos).replace(',', '.') }}</td>
+                    
+                    <td class="px-6 py-4 text-center">
+                        {% if v.estado_pago == 'Sin Pagar' %}
+                            <span class="px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-lg text-[11px] font-bold">{{ v.estado_pago }}</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-lg text-[11px] font-bold">{{ v.estado_pago }}</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-4 text-center">
+                        {% if v.estado == 'Pendiente' %}
+                            <span class="px-3 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg text-[11px] font-bold">{{ v.estado }}</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-[11px] font-bold">{{ v.estado }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-3 py-1 bg-gray-50 text-gray-500 border border-gray-200 rounded-lg text-[11px] font-bold">{{ v.despacho or 'Retiro Local' }}</span>
+                    </td>
+
+                    {% if session['usuario_rol'] == 'Administrador' %}
+                    <td class="px-6 py-4 text-gray-500 font-medium">{{ v.vendedor_nombre or 'Admin' }}</td>
+                    {% endif %}
+
+                    <td class="px-6 py-4 text-right relative">
+                        <button @click="menuVta = !menuVta" @click.outside="menuVta = false" class="text-gray-400 hover:text-gray-900 px-2 outline-none">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <div x-show="menuVta" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50 text-left overflow-hidden">
+                            <a href="/venta/imprimir/{{ v.id }}" target="_blank" class="w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                <i class="fa-solid fa-file-pdf w-4 text-red-500"></i> Descargar PDF
+                            </a>
+                            <a href="/venta/editar/{{ v.id }}" class="w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t flex items-center gap-3 transition-colors">
+                                <i class="fa-solid fa-pencil w-4 text-blue-500"></i> Editar
+                            </a>
+                            <button @click="if(confirm('¿Estás seguro de que deseas eliminar esta venta?')) { window.location.href='/venta/eliminar/{{ v.id }}' }" 
+                                    class="w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t flex items-center gap-3 font-medium transition-colors">
+                                <i class="fa-regular fa-trash-can w-4"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

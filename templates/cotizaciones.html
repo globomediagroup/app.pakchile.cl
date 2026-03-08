@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+
+{% block title %}Cotizaciones{% endblock %}
+
+{% block content %}
+<div x-data="{ busqueda: '', filtroEstado: 'Todos' }" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex gap-4 w-1/2">
+            <div class="relative w-2/3">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" x-model="busqueda" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Buscar por número, cliente o vendedor...">
+            </div>
+            <div class="w-1/3 text-left">
+                <select x-model="filtroEstado" class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
+                    <option value="Todos">Todos los estados</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="Enviada">Enviada</option>
+                    <option value="Convertida">Convertida</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <a href="/cotizacion/nueva" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-md transition-all active:scale-95">
+                <i class="fa-solid fa-plus"></i> Nueva Cotización
+            </a>
+        </div>
+    </div>
+
+    <div class="overflow-visible min-h-[250px] pb-24">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold">
+                <tr>
+                    <th class="px-6 py-3 text-left">N°</th>
+                    <th class="px-6 py-3 text-left">Cliente</th>
+                    <th class="px-6 py-3 text-left">Fecha</th>
+                    <th class="px-6 py-3 text-left">Válida Hasta</th>
+                    <th class="px-6 py-3 text-left">Total</th>
+                    <th class="px-6 py-3 text-left">Estado</th>
+                    {% if session['usuario_rol'] == 'Administrador' %}
+                    <th class="px-6 py-3 text-left">Vendedor</th>
+                    {% endif %}
+                    <th class="px-6 py-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-left">
+                {% for c in cotizaciones %}
+                <tr x-data="{ menuCot: false }" 
+                    x-show="(busqueda === '' || ('{{ c.numero }} {{ c.cliente_nombre }} {{ c.vendedor_nombre or '' }}').toLowerCase().includes(busqueda.toLowerCase())) && (filtroEstado === 'Todos' || '{{ c.estado }}' === filtroEstado)"
+                    class="hover:bg-gray-50 transition-colors">
+                    
+                    <td class="px-6 py-4 text-gray-500 font-medium">{{ c.numero }}</td>
+                    <td class="px-6 py-4 font-bold text-gray-900">{{ c.cliente_nombre }}</td>
+                    <td class="px-6 py-4 text-gray-500">{{ c.fecha }}</td>
+                    <td class="px-6 py-4 text-gray-500">{{ c.valida_hasta }}</td>
+                    <td class="px-6 py-4 font-bold text-gray-900">${{ "{:,}".format(c.total).replace(',', '.') }}</td>
+                    <td class="px-6 py-4">
+                        {% if c.estado == 'Enviada' %}
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-full text-[10px] font-bold tracking-wide">{{ c.estado }}</span>
+                        {% elif c.estado == 'Convertida' %}
+                            <span class="px-3 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded-full text-[10px] font-bold tracking-wide">{{ c.estado }}</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-gray-100 text-gray-600 border border-gray-200 rounded-full text-[10px] font-bold tracking-wide">{{ c.estado }}</span>
+                        {% endif %}
+                    </td>
+                    {% if session['usuario_rol'] == 'Administrador' %}
+                    <td class="px-6 py-4 text-gray-500 font-medium">{{ c.vendedor_nombre or 'Admin' }}</td>
+                    {% endif %}
+                    <td class="px-6 py-4 text-right relative">
+                        <button @click="menuCot = !menuCot" @click.outside="menuCot = false" class="text-gray-400 hover:text-gray-900 px-2 outline-none">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <div x-show="menuCot" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50 text-left overflow-hidden">
+                            <a href="/cotizacion/imprimir/{{ c.id }}" target="_blank" class="w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                <i class="fa-solid fa-file-pdf w-4 text-red-500"></i> Descargar PDF
+                            </a>
+                            <a href="/cotizacion/convertir/{{ c.id }}" 
+                               onclick="return confirm('¿Deseas generar una venta a partir de esta cotización?');"
+                               class="w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t flex items-center gap-3 transition-colors {% if c.estado == 'Convertida' %}opacity-50 pointer-events-none{% endif %}">
+                                <i class="fa-solid fa-code-compare w-4 text-green-500"></i> Convertir
+                            </a>
+                            <a href="/cotizacion/editar/{{ c.id }}" class="w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t flex items-center gap-3 transition-colors">
+                                <i class="fa-solid fa-pencil w-4 text-blue-500"></i> Editar
+                            </a>
+                            <button @click="if(confirm('¿Estás seguro de que deseas eliminar esta cotización?')) { window.location.href='/cotizacion/eliminar/{{ c.id }}' }" 
+                                    class="w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t flex items-center gap-3 font-medium transition-colors">
+                                <i class="fa-regular fa-trash-can w-4"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

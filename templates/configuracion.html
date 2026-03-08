@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block title %}Configuración{% endblock %}
+
+{% block content %}
+<div x-data="{ tab: 'bodegas' }">
+    
+    <h2 class="text-xl font-bold text-gray-900 mb-6">Configuración</h2>
+
+    <div class="flex gap-2 mb-6">
+        <button @click="tab = 'bodegas'" :class="tab === 'bodegas' ? 'bg-white shadow-sm font-bold text-gray-900' : 'text-gray-500 hover:text-gray-700'" class="px-5 py-2 rounded-lg text-sm transition-all outline-none">
+            Bodegas
+        </button>
+        <button @click="tab = 'categorias'" :class="tab === 'categorias' ? 'bg-white shadow-sm font-bold text-gray-900' : 'text-gray-500 hover:text-gray-700'" class="px-5 py-2 rounded-lg text-sm transition-all outline-none">
+            Categorías
+        </button>
+        <button @click="tab = 'metodos'" :class="tab === 'metodos' ? 'bg-white shadow-sm font-bold text-gray-900' : 'text-gray-500 hover:text-gray-700'" class="px-5 py-2 rounded-lg text-sm transition-all outline-none">
+            Métodos de Pago
+        </button>
+    </div>
+
+    <div x-show="tab === 'bodegas'" x-cloak class="space-y-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-warehouse"></i> Nueva Bodega
+            </h3>
+            <form action="/configuracion/bodega" method="POST">
+                <div class="grid grid-cols-3 gap-6 mb-5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Nombre *</label>
+                        <input type="text" name="nombre" required class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Código *</label>
+                        <input type="text" name="codigo" required class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Dirección</label>
+                        <input type="text" name="direccion" class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 outline-none">
+                    <i class="fa-solid fa-plus"></i> Crear Bodega
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-3">
+            {% for b in bodegas %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex justify-between items-center hover:border-blue-200 transition-colors">
+                <div>
+                    <h4 class="font-bold text-gray-900 text-sm">{{ b.nombre }} <span class="text-xs text-gray-400 font-normal ml-2">({{ b.codigo }})</span></h4>
+                    <p class="text-xs text-gray-500 mt-1">{{ b.direccion }}</p>
+                </div>
+                <a href="/configuracion/bodega/eliminar/{{ b.id }}" class="text-red-400 hover:text-red-600 p-2"><i class="fa-regular fa-trash-can"></i></a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div x-show="tab === 'categorias'" x-cloak class="space-y-4">
+         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-tags"></i> Nueva Categoría
+            </h3>
+            <form action="/configuracion/categoria" method="POST">
+                <div class="grid grid-cols-2 gap-6 mb-5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Nombre *</label>
+                        <input type="text" name="nombre" required class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Descripción</label>
+                        <input type="text" name="descripcion" class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 outline-none">
+                    <i class="fa-solid fa-plus"></i> Crear Categoría
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-3">
+            {% for c in categorias %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex justify-between items-center hover:border-blue-200 transition-colors">
+                <div>
+                    <h4 class="font-bold text-gray-900 text-sm">{{ c.nombre }}</h4>
+                    {% if c.descripcion %}<p class="text-xs text-gray-500 mt-1">{{ c.descripcion }}</p>{% endif %}
+                </div>
+                <a href="/configuracion/categoria/eliminar/{{ c.id }}" class="text-red-400 hover:text-red-600 p-2"><i class="fa-regular fa-trash-can"></i></a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div x-show="tab === 'metodos'" x-cloak class="space-y-4">
+         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-wave"></i> Nuevo Método de Pago
+            </h3>
+            <form action="/configuracion/metodo" method="POST">
+                <div class="grid grid-cols-2 gap-6 mb-5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Nombre *</label>
+                        <input type="text" name="nombre" required placeholder="Ej: Tarjeta de Crédito" class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-900 mb-1">Descripción</label>
+                        <input type="text" name="descripcion" class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 outline-none">
+                    <i class="fa-solid fa-plus"></i> Crear Método
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-3">
+            {% for m in metodos %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex justify-between items-center hover:border-blue-200 transition-colors">
+                <div>
+                    <h4 class="font-bold text-gray-900 text-sm">{{ m.nombre }}</h4>
+                    {% if m.descripcion %}<p class="text-xs text-gray-500 mt-1">{{ m.descripcion }}</p>{% endif %}
+                </div>
+                <a href="/configuracion/metodo/eliminar/{{ m.id }}" class="text-red-400 hover:text-red-600 p-2"><i class="fa-regular fa-trash-can"></i></a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

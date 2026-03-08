@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura {{ venta.numero }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sii-border { border: 1px solid #000; }
+        .sii-border-b { border-bottom: 1px solid #000; }
+        .sii-border-r { border-right: 1px solid #000; }
+        .sii-border-l { border-left: 1px solid #000; }
+        .sii-border-t { border-top: 1px solid #000; }
+    </style>
+</head>
+<body class="bg-gray-200 flex justify-center py-10 font-sans">
+
+    <div class="fixed top-5 right-5 flex flex-col gap-3 no-print z-50">
+        <button onclick="generarPDF()" class="bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-blue-700 font-bold flex items-center gap-2">
+            <i class="fa-solid fa-download"></i> Volver a Descargar
+        </button>
+        <button onclick="window.close()" class="bg-gray-500 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-gray-600 font-bold flex items-center gap-2">
+            <i class="fa-solid fa-xmark"></i> Cerrar Pestaña
+        </button>
+    </div>
+
+    <div id="documento-pdf" class="bg-white w-[210mm] min-h-[297mm] p-6 relative">
+        
+        <div class="border-[1.5px] border-gray-500 p-4 h-full">
+            
+            <div class="flex justify-between items-start mb-4">
+                
+                <div class="w-[22%] pr-2">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo PakChile" class="w-full h-auto max-h-28 object-contain">
+                </div>
+
+                <div class="w-[45%] text-[10px] text-blue-900 leading-tight pt-1">
+                    <h1 class="font-bold text-red-600 text-xs mb-1 uppercase">IMPORTADORA Y COMERCIALIZADORA PAOLA LAISECA GARDELLA E.I.R.L</h1>
+                    <p>Giro: IMPORT EXPORT COMERC DISTR ART DE BEBE-JUGUETERIA-ROPA-MENAJE Y ALMAC</p>
+                    <p>Ruiz Tagle 287 - ESTACION CENTRAL</p>
+                    <p>Email : hola@pakchile.cl Telefono : TIPO DE VENTA: DEL GIRO</p>
+                </div>
+
+                <div class="w-[30%]">
+                    <div class="border-[2px] border-red-600 p-2 text-center text-red-600 font-bold mb-1">
+                        <p class="text-sm">R.U.T.: 76.320.328-K</p>
+                        <p class="text-sm uppercase">{{ venta.tipo_documento }}</p>
+                        <p class="text-sm">Nº {{ venta.numero.replace('VTA-', '') }}</p>
+                    </div>
+                    <div class="text-center text-red-600 font-bold text-[11px]">
+                        S.I.I. - SANTIAGO PONIENTE
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-start mb-2">
+                <div class="w-[65%] border-[1.5px] border-black p-2 text-[10px] leading-tight">
+                    <div class="flex"><span class="w-24 text-blue-900">SEÑOR(ES):</span> <span class="uppercase">{{ cliente.razon_social if cliente else venta.cliente_nombre }}</span></div>
+                    <div class="flex"><span class="w-24 text-blue-900">R.U.T.:</span> <span>{{ cliente.rut if cliente else 'Sin RUT' }}</span></div>
+                    <div class="flex"><span class="w-24 text-blue-900">GIRO:</span> <span class="uppercase"> </span></div>
+                    <div class="flex"><span class="w-24 text-blue-900">DIRECCION:</span> <span class="uppercase">{{ cliente.direccion if cliente and cliente.direccion else 'SIN DIRECCION INFORMADA' }}</span></div>
+                    <div class="flex">
+                        <span class="w-24 text-blue-900">COMUNA:</span> <span class="w-32 uppercase">{{ cliente.comuna if cliente and cliente.comuna else 'SIN COMUNA' }}</span>
+                        <span class="w-16 text-blue-900">CIUDAD:</span> <span class="uppercase">{{ cliente.comuna if cliente and cliente.comuna else '' }}</span>
+                    </div>
+                    <div class="flex"><span class="w-24 text-blue-900">CONTACTO:</span> <span class="uppercase">{{ cliente.email if cliente else '' }}</span></div>
+                    <div class="flex"><span class="w-24 text-blue-900">TIPO COMPRA:</span> <span class="uppercase">DEL GIRO</span></div>
+                    <div class="flex"><span class="w-24 text-blue-900">DESPACHO:</span> <span class="uppercase font-bold">{{ venta.despacho if venta.despacho else 'Retiro Local' }}</span></div>
+                </div>
+                <div class="w-[33%] text-[10px] mt-2">
+                    <span class="text-blue-900">Fecha Emision:</span> <span>{{ venta.fecha.split(' ')[0] }}</span>
+                </div>
+            </div>
+
+            <table class="w-full text-[10px] border-[1.5px] border-black mb-4">
+                <thead class="border-b-[1.5px] border-black">
+                    <tr class="text-blue-900">
+                        <th class="border-r-[1.5px] border-black py-1 px-1 w-16 font-normal">Codigo</th>
+                        <th class="border-r-[1.5px] border-black py-1 px-2 text-left font-normal">Descripcion</th>
+                        <th class="border-r-[1.5px] border-black py-1 px-1 w-16 font-normal text-center">Cantidad</th>
+                        <th class="border-r-[1.5px] border-black py-1 px-2 w-20 font-normal text-center">Precio</th>
+                        <th class="border-r-[1.5px] border-black py-1 px-1 w-16 font-normal text-center">%Impto<br>Adic.*</th>
+                        <th class="border-r-[1.5px] border-black py-1 px-1 w-12 font-normal text-center">%Desc.</th>
+                        <th class="py-1 px-2 w-24 font-normal text-center">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in venta.detalle %}
+                    <tr>
+                        <td class="border-r-[1.5px] border-black py-1 px-1 text-center">{{ item.sku if item.sku else '-' }}</td>
+                        <td class="border-r-[1.5px] border-black py-1 px-2">{{ item.nombre }}</td>
+                        <td class="border-r-[1.5px] border-black py-1 px-1 text-center">{{ item.cantidad }} un</td>
+                        <td class="border-r-[1.5px] border-black py-1 px-2 text-right">{{ "{:,}".format(item.precio_unitario).replace(',', '.') }}</td>
+                        <td class="border-r-[1.5px] border-black py-1 px-1 text-center"></td>
+                        <td class="border-r-[1.5px] border-black py-1 px-1 text-center">{{ item.descuento if item.descuento > 0 else '' }}</td>
+                        <td class="py-1 px-2 text-right">{{ "{:,}".format(item.subtotal).replace(',', '.') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% for i in range(15 - venta.detalle|length) %}
+                    <tr>
+                        <td class="border-r-[1.5px] border-black py-3 px-1"></td><td class="border-r-[1.5px] border-black py-3 px-2"></td><td class="border-r-[1.5px] border-black py-3 px-1"></td>
+                        <td class="border-r-[1.5px] border-black py-3 px-2"></td><td class="border-r-[1.5px] border-black py-3 px-1"></td><td class="border-r-[1.5px] border-black py-3 px-1"></td><td class="py-3 px-2"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="flex justify-between items-start text-[10px]">
+                <div class="w-[50%]">
+                    <p class="mb-2"><span class="text-blue-900">Forma de Pago:</span> {{ venta.condicion_pago }}</p>
+                    
+                    <div class="w-[260px] h-[90px] flex items-center justify-center bg-white mb-1 overflow-hidden">
+                        <img src="https://bwipjs-api.metafloor.com/?bcid=pdf417&text={{ venta.numero | urlencode }}%7C{{ venta.total }}%7C{{ cliente.rut if cliente else '0' }}%7C{{ venta.fecha | urlencode }}&scaleX=2&scaleY=1&columns=15" crossorigin="anonymous" class="w-full h-full object-fill" alt="Timbre SII">
+                    </div>
+                    
+                    <p class="text-center w-[260px]">Timbre Electrónico SII</p>
+                    <p class="text-center w-[260px]">Res.99 de 2014 Verifique documento: www.sii.cl</p>
+                </div>
+
+                <div class="w-[45%] border-[1.5px] border-black p-2 mt-4">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-blue-900">MONTO NETO</span>
+                        <span>$ <span class="inline-block w-20 text-right">{{ "{:,}".format(venta.neto).replace(',', '.') }}</span></span>
+                    </div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-blue-900">I.V.A. {% if venta.tipo_documento == 'Nota de Venta' %}0%{% else %}19%{% endif %}</span>
+                        <span>$ <span class="inline-block w-20 text-right">{{ "{:,}".format(venta.iva).replace(',', '.') }}</span></span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-blue-900">IMPUESTO ADICIONAL</span>
+                        <span>$ <span class="inline-block w-20 text-right">0</span></span>
+                    </div>
+                    <div class="flex justify-between font-bold mb-2">
+                        <span class="text-blue-900">TOTAL</span>
+                        <span>$ <span class="inline-block w-20 text-right">{{ "{:,}".format(venta.total).replace(',', '.') }}</span></span>
+                    </div>
+                    
+                    {% set total_abonos = venta.pagos | map(attribute='monto') | sum %}
+                    {% set saldo = venta.total - total_abonos %}
+                    
+                    <div class="flex justify-between text-blue-900 mt-2 border-t-[1.5px] border-black pt-1">
+                        <span>PAGADO</span>
+                        <span>$ <span class="inline-block w-20 text-right">{{ "{:,}".format(total_abonos).replace(',', '.') }}</span></span>
+                    </div>
+                    <div class="flex justify-between text-blue-900 mt-1">
+                        <span>SALDO PEND.</span>
+                        <span>$ <span class="inline-block w-20 text-right">{{ "{:,}".format(saldo).replace(',', '.') }}</span></span>
+                    </div>
+                </div>
+            </div>
+
+        </div> </div>
+
+    <script>
+        function generarPDF() {
+            const elemento = document.getElementById('documento-pdf');
+            document.querySelector('.no-print').style.display = 'none';
+            
+            const opciones = {
+                margin:       0,
+                filename:     '{{ venta.numero }}_Documento.pdf',
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opciones).from(elemento).save().then(() => {
+                document.querySelector('.no-print').style.display = 'flex';
+            });
+        }
+
+        window.onload = () => { setTimeout(() => { generarPDF(); }, 500); };
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GestiónPro{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-slate-50 font-sans antialiased text-gray-900" x-data="{ sidebarExpanded: true }">
+
+    <aside :class="sidebarExpanded ? 'w-64' : 'w-20'" class="fixed left-0 top-0 h-screen bg-[#0f172a] text-slate-400 flex flex-col transition-all duration-300 z-50 overflow-hidden">
+        
+        <div class="h-20 flex items-center justify-center px-4 border-b border-slate-800 overflow-hidden">
+            <img src="{{ url_for('static', filename='PakChile_6.png') }}" alt="PakChile" 
+                 class="object-contain transition-all duration-300"
+                 :class="sidebarExpanded ? 'h-7 w-auto' : 'h-6 w-auto'">
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1 scrollbar-hide">
+            
+            <a href="/dashboard" class="flex items-center gap-3 p-3 rounded-lg transition-all group {% if '/dashboard' in request.path %}bg-blue-600 text-white shadow-lg{% else %}hover:bg-slate-800 text-slate-400{% endif %}" title="Dashboard">
+    <i class="fa-solid fa-border-all w-6 text-center text-lg {% if '/dashboard' not in request.path %}group-hover:text-white{% endif %} transition-colors"></i>
+    <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap {% if '/dashboard' not in request.path %}group-hover:text-white{% endif %} transition-colors">Dashboard</span>
+</a>
+            
+            <a href="/clientes" class="flex items-center gap-3 p-3 rounded-lg transition-all group {% if '/cliente' in request.path %}bg-blue-600 text-white shadow-lg{% else %}hover:bg-slate-800 text-slate-400{% endif %}" title="Clientes">
+                <i class="fa-solid fa-users w-6 text-center text-lg {% if '/cliente' not in request.path %}group-hover:text-white{% endif %} transition-colors"></i>
+                <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap {% if '/cliente' not in request.path %}group-hover:text-white{% endif %} transition-colors">Clientes</span>
+            </a>
+
+            <a href="/inventario" class="flex items-center gap-3 p-3 rounded-lg transition-all group {% if '/inventario' in request.path %}bg-blue-600 text-white shadow-lg{% else %}hover:bg-slate-800 text-slate-400{% endif %}" title="Inventario">
+                <i class="fa-solid fa-box w-6 text-center text-lg {% if '/inventario' not in request.path %}group-hover:text-white{% endif %} transition-colors"></i>
+                <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap {% if '/inventario' not in request.path %}group-hover:text-white{% endif %} transition-colors">Inventario</span>
+            </a>
+
+            <a href="/cotizaciones" class="flex items-center gap-3 p-3 rounded-lg transition-all group {% if '/cotizacion' in request.path %}bg-blue-600 text-white shadow-lg{% else %}hover:bg-slate-800 text-slate-400{% endif %}" title="Cotizaciones">
+                <i class="fa-solid fa-file-invoice-dollar w-6 text-center text-lg {% if '/cotizacion' not in request.path %}group-hover:text-white{% endif %} transition-colors"></i>
+                <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap {% if '/cotizacion' not in request.path %}group-hover:text-white{% endif %} transition-colors">Cotizaciones</span>
+            </a>
+
+            <a href="/ventas" class="flex items-center gap-3 p-3 rounded-lg transition-all group {% if '/venta' in request.path %}bg-blue-600 text-white shadow-lg{% else %}hover:bg-slate-800 text-slate-400{% endif %}" title="Ventas">
+                <i class="fa-solid fa-cart-shopping w-6 text-center text-lg {% if '/venta' not in request.path %}group-hover:text-white{% endif %} transition-colors"></i>
+                <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap {% if '/venta' not in request.path %}group-hover:text-white{% endif %} transition-colors">Ventas</span>
+            </a>
+
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-slate-800 text-slate-400 group" title="Reportes">
+                <i class="fa-solid fa-chart-column w-6 text-center text-lg group-hover:text-white transition-colors"></i>
+                <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap group-hover:text-white transition-colors">Reportes</span>
+            </a>
+
+            <a href="/configuracion" class="flex items-center gap-3 p-3 rounded-lg transition-all group {% if '/configuracion' in request.path %}bg-blue-600 text-white shadow-lg{% else %}hover:bg-slate-800 text-slate-400{% endif %}" title="Configuración">
+                <i class="fa-solid fa-gear w-6 text-center text-lg {% if '/configuracion' not in request.path %}group-hover:text-white{% endif %} transition-colors"></i>
+                <span x-show="sidebarExpanded" x-transition.opacity class="text-sm font-medium whitespace-nowrap {% if '/configuracion' not in request.path %}group-hover:text-white{% endif %} transition-colors">Configuración</span>
+            </a>
+        </nav>
+
+        <div class="p-3 border-t border-slate-800 space-y-1">
+            
+            <button @click="sidebarExpanded = !sidebarExpanded" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors outline-none group" :title="sidebarExpanded ? 'Colapsar' : 'Expandir'">
+                <i :class="sidebarExpanded ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right'" class="w-6 text-center text-lg group-hover:text-white transition-colors"></i>
+                <span x-show="sidebarExpanded" class="text-sm font-medium whitespace-nowrap group-hover:text-white transition-colors">Colapsar</span>
+            </button>
+            
+            <a href="/login" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 text-red-400 transition-colors outline-none group" title="Cerrar Sesión">
+                <i class="fa-solid fa-arrow-right-from-bracket w-6 text-center text-lg group-hover:text-red-300 transition-colors"></i>
+                <span x-show="sidebarExpanded" class="text-sm font-medium whitespace-nowrap group-hover:text-red-300 transition-colors">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <div :class="sidebarExpanded ? 'ml-64' : 'ml-20'" class="min-h-screen flex flex-col transition-all duration-300 bg-slate-50">
+        
+        <header class="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0">
+            <h1 class="text-2xl font-bold text-gray-900">{{ self.title() }}</h1>
+            
+            <div class="flex items-center gap-6">
+                <button class="text-gray-400 hover:text-blue-600 transition-colors outline-none relative">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="flex items-center gap-3 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                        FL
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">franc.laiseca</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 p-8">
+            {% block content %}{% endblock %}
+        </main>
+        
+    </div>
+
+</body>
+</html>
