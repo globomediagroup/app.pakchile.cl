@@ -978,6 +978,7 @@ def agregar_despacho():
     cursor = conn.cursor()
     try:
         # Agregamos la columna 'despacho' a la tabla ventas. 
+        # Agregamos la columna 'despacho' a la tabla ventas. 2
         # Usamos ADD COLUMN IF NOT EXISTS para que no haya error si ya se creó.
         cursor.execute("ALTER TABLE ventas ADD COLUMN despacho VARCHAR(100) DEFAULT 'Retiro Local'")
         conn.commit()
