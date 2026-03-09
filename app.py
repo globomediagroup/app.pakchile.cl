@@ -1119,6 +1119,32 @@ def instalar_kardex():
     finally:
         cursor.close()
         conn.close()
-
+@app.route('/limpiar-kardex')
+def limpiar_kardex():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # 1. Vaciar la tabla de movimientos (borra todo y reinicia el ID a 1)
+        cursor.execute("TRUNCATE TABLE movimientos_inventario")
+        
+        # 2. Tomar el stock actual de los productos y fijarlo como Saldo Inicial
+        cursor.execute("SELECT id, stock FROM productos")
+        productos = cursor.fetchall()
+        
+        usuario_id = session.get('usuario_id', 1)
+        
+        for p in productos:
+            cursor.execute("""
+                INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad, saldo_resultante, documento_referencia) 
+                VALUES (%s, %s, 'Entrada (Saldo Inicial)', %s, %s, 'Ajuste de Sistema')
+            """, (p['id'], usuario_id, p['stock'], p['stock']))
+            
+        conn.commit()
+        return "<h2 style='color:green;'>¡Kardex limpiado con éxito! Se ha fijado el Saldo Inicial.</h2><br><a href='/inventario/movimientos'>Ver Historial Limpio</a>"
+    except Exception as e:
+        return f"<h2 style='color:red;'>Error al limpiar: {str(e)}</h2>"
+    finally:
+        cursor.close()
+        conn.close()
 if __name__ == "__main__":
     app.run(debug=True)
