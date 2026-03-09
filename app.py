@@ -523,6 +523,10 @@ def nueva_venta():
         cursor.execute("SELECT * FROM productos WHERE estado='Activo'")
         productos = cursor.fetchall()
         
+        # NUEVO: Traer métodos de pago de la BD
+        cursor.execute("SELECT * FROM metodos_pago_lista")
+        metodos = cursor.fetchall()
+        
         # PREVENCIÓN DE ERROR 500 CON JSON
         for c in clientes:
             for k, v in c.items():
@@ -538,11 +542,11 @@ def nueva_venta():
             if cot_origen:
                 cursor.execute("SELECT cd.*, p.nombre FROM cotizacion_detalles cd JOIN productos p ON cd.producto_id = p.id WHERE cd.cotizacion_id = %s", (cot_origen['id'],))
                 cot_origen['detalle'] = cursor.fetchall()
-                # Reparar error json en cotizacion_origen si tiene fechas
                 for k, v in cot_origen.items():
                     if type(v).__name__ in ['datetime', 'date', 'Decimal']: cot_origen[k] = str(v)
                 
-        return render_template('nueva_venta.html', clientes=clientes, productos=productos, cotizacion_origen=cot_origen)
+        # Pasamos la variable 'metodos' al HTML
+        return render_template('nueva_venta.html', clientes=clientes, productos=productos, cotizacion_origen=cot_origen, metodos=metodos)
     except Exception as e:
         return f"<h1>Error Python detectado en Carga:</h1><p style='color:red;'>{str(e)}</p><a href='/ventas'>Volver</a>"
     finally:
@@ -639,7 +643,11 @@ def editar_venta(id):
         cursor.execute("SELECT * FROM productos WHERE estado='Activo'")
         productos = cursor.fetchall()
         
-        # PREVENCIÓN ERROR JSON (Trata fechas y decimales)
+        # NUEVO: Traer métodos de pago de la BD
+        cursor.execute("SELECT * FROM metodos_pago_lista")
+        metodos = cursor.fetchall()
+        
+        # PREVENCIÓN ERROR JSON
         for c in clientes:
             for k, v in c.items():
                 if type(v).__name__ in ['datetime', 'date', 'Decimal']: c[k] = str(v)
@@ -655,7 +663,8 @@ def editar_venta(id):
         for k, v in venta.items():
             if type(v).__name__ in ['datetime', 'date', 'Decimal'] and k != 'detalle' and k != 'pagos': venta[k] = str(v)
                 
-        return render_template('editar_venta.html', venta=venta, clientes=clientes, productos=productos)
+        # Pasamos la variable 'metodos' al HTML
+        return render_template('editar_venta.html', venta=venta, clientes=clientes, productos=productos, metodos=metodos)
     except Exception as e:
         return f"<h1>Error Python al Cargar Editar Venta:</h1><p style='color:red;'>{str(e)}</p><a href='/ventas'>Volver</a>"
     finally:
