@@ -149,15 +149,18 @@ def inventario():
         
         if tipo_accion == 'recepcion':
             prod_id = int(request.form.get('producto_id'))
-            cantidad = int(request.form.get('cantidad', 0))
+            cantidad = float(request.form.get('cantidad', 0))
             
             # 1. Sumamos el stock al producto
             cursor.execute("UPDATE productos SET stock = stock + %s WHERE id = %s", (cantidad, prod_id))
             
-            # 2. Guardamos el registro en el historial (Kardex)
+            # 2. Guardamos el registro en el Kardex Profesional
+            cursor.execute("SELECT stock FROM productos WHERE id = %s", (prod_id,))
+            saldo_actual = cursor.fetchone()['stock']
             usuario_id = session.get('usuario_id')
-            cursor.execute("""INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad) 
-                              VALUES (%s, %s, 'Recepción', %s)""", (prod_id, usuario_id, cantidad))
+            cursor.execute("""INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad, saldo_resultante, documento_referencia) 
+                              VALUES (%s, %s, 'Entrada (Recepción)', %s, %s, 'Ajuste de Inventario')""", 
+                           (prod_id, usuario_id, cantidad, saldo_actual))
         
         elif tipo_accion == 'nuevo_editar':
             prod_id = request.form.get('id')
@@ -496,10 +499,12 @@ def nueva_venta():
                 # Descontar stock con decimales
                 cursor.execute("UPDATE productos SET stock = stock - %s WHERE id = %s", (cant, prod_id))
                 
-            for p in pagos:
-                metodo = p.get('metodo', 'Efectivo')
-                sql_pago = """INSERT INTO pagos (venta_id, monto, metodo_pago) VALUES (%s, %s, %s)"""
-                cursor.execute(sql_pago, (venta_id, int(p.get('monto', 0)), metodo))
+                # KARDEX: Registro de Salida por Venta
+                cursor.execute("SELECT stock FROM productos WHERE id = %s", (prod_id,))
+                saldo_actual = cursor.fetchone()['stock']
+                cursor.execute("""INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad, saldo_resultante, documento_referencia) 
+                                  VALUES (%s, %s, 'Salida (Venta)', %s, %s, %s)""", 
+                               (prod_id, session['usuario_id'], cant, saldo_actual, numero_vta))
                 
             if cot_val:
                 cursor.execute("UPDATE cotizaciones SET estado = 'Convertida' WHERE id = %s", (cot_val,))
@@ -586,11 +591,20 @@ def editar_venta(id):
             estado_pago = "Pagado" if total_pagado >= total else "Sin Pagar"
             estado_venta = "Completada" if total_pagado >= total else "Pendiente"
             
-            # 1. REVERTIR STOCK ANTERIOR (Evita inconsistencias de inventario)
+            # 1. REVERTIR STOCK ANTERIOR Y REGISTRAR EN KARDEX
             cursor.execute("SELECT producto_id, cantidad FROM venta_detalles WHERE venta_id = %s", (id,))
             old_details = cursor.fetchall()
+            
+            cursor.execute("SELECT numero FROM ventas WHERE id = %s", (id,))
+            num_venta = cursor.fetchone()['numero']
+            
             for od in old_details:
                 cursor.execute("UPDATE productos SET stock = stock + %s WHERE id = %s", (float(od['cantidad']), od['producto_id']))
+                cursor.execute("SELECT stock FROM productos WHERE id = %s", (od['producto_id'],))
+                saldo_rev = cursor.fetchone()['stock']
+                cursor.execute("""INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad, saldo_resultante, documento_referencia) 
+                                  VALUES (%s, %s, 'Entrada (Edición Reversión)', %s, %s, %s)""", 
+                               (od['producto_id'], session['usuario_id'], float(od['cantidad']), saldo_rev, num_venta))
             
             # 2. LIMPIAR DETALLES Y PAGOS VIEJOS
             cursor.execute("DELETE FROM venta_detalles WHERE venta_id = %s", (id,))
@@ -600,14 +614,20 @@ def editar_venta(id):
             sql_cab = """UPDATE ventas SET cliente_id=%s, tipo_documento=%s, condicion_pago=%s, estado_pago=%s, estado_venta=%s, neto=%s, iva=%s, total=%s, despacho=%s WHERE id=%s"""
             cursor.execute(sql_cab, (cliente_id, tipo_documento, condicion_pago, estado_pago, estado_venta, neto, iva, total, despacho, id))
             
-            
-            # 4. INSERTAR NUEVOS DETALLES Y DESCONTAR NUEVO STOCK (Con soporte para decimales)
+            # 4. INSERTAR NUEVOS DETALLES, DESCONTAR STOCK Y REGISTRAR KARDEX
             for item in detalle:
                 prod_id = int(item.get('producto_id', 0))
                 cant = float(item.get('cantidad', 1)) 
                 sql_det = """INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio_unitario, subtotal_linea) VALUES (%s, %s, %s, %s, %s)"""
                 cursor.execute(sql_det, (id, prod_id, cant, int(item.get('precio_unitario', 0)), int(item.get('subtotal', 0))))
+                
                 cursor.execute("UPDATE productos SET stock = stock - %s WHERE id = %s", (cant, prod_id))
+                
+                cursor.execute("SELECT stock FROM productos WHERE id = %s", (prod_id,))
+                saldo_nuevo = cursor.fetchone()['stock']
+                cursor.execute("""INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad, saldo_resultante, documento_referencia) 
+                                  VALUES (%s, %s, 'Salida (Edición Nueva)', %s, %s, %s)""", 
+                               (prod_id, session['usuario_id'], cant, saldo_nuevo, num_venta))
                 
             # 5. INSERTAR NUEVOS PAGOS
             for p in pagos:
@@ -675,11 +695,25 @@ def editar_venta(id):
 def eliminar_venta(id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    # Devolver el stock antes de borrar
+    
+    cursor.execute("SELECT numero FROM ventas WHERE id = %s", (id,))
+    venta = cursor.fetchone()
+    num_venta = venta['numero'] if venta else f"Venta ID {id}"
+    
+    # Devolver el stock antes de borrar Y registrar en Kardex
     cursor.execute("SELECT producto_id, cantidad FROM venta_detalles WHERE venta_id = %s", (id,))
     detalles = cursor.fetchall()
     for det in detalles:
-        cursor.execute("UPDATE productos SET stock = stock + %s WHERE id = %s", (det['cantidad'], det['producto_id']))
+        cant = float(det['cantidad'])
+        prod_id = det['producto_id']
+        
+        cursor.execute("UPDATE productos SET stock = stock + %s WHERE id = %s", (cant, prod_id))
+        
+        cursor.execute("SELECT stock FROM productos WHERE id = %s", (prod_id,))
+        saldo_rev = cursor.fetchone()['stock']
+        cursor.execute("""INSERT INTO movimientos_inventario (producto_id, usuario_id, tipo_movimiento, cantidad, saldo_resultante, documento_referencia) 
+                          VALUES (%s, %s, 'Entrada (Anulación Venta)', %s, %s, %s)""", 
+                       (prod_id, session.get('usuario_id'), cant, saldo_rev, num_venta))
     
     cursor.execute("DELETE FROM ventas WHERE id = %s", (id,))
     conn.commit()
