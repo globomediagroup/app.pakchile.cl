@@ -31,12 +31,12 @@
             {% if session['usuario_rol'] == 'Administrador' %}
             <div class="w-1/5">
                 <select x-model="filtroVendedor" class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
-                    <option value="">Vendedor</option>
-                    {% set vendedores = ventas | map(attribute='vendedor_nombre') | reject('none') | unique %}
+                    <option value="">Vendedor (Todos)</option>
+                    <option value="Admin">Admin</option>
+                    {% set vendedores = ventas | map(attribute='vendedor_nombre') | reject('none') | reject('equalto', 'Admin') | unique %}
                     {% for vendedor in vendedores %}
                         <option value="{{ vendedor }}">{{ vendedor }}</option>
                     {% endfor %}
-                    <option value="Admin">Admin</option>
                 </select>
             </div>
             {% endif %}
