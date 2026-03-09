@@ -803,6 +803,39 @@ def eliminar_metodo(id):
     conn.close()
     return redirect(url_for('mostrar_configuracion'))
 
+@app.route('/configuracion/bodega/editar/<int:id>', methods=['POST'])
+def editar_bodega(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE bodegas SET nombre=%s, codigo=%s, direccion=%s WHERE id=%s", 
+                   (request.form.get('nombre'), request.form.get('codigo'), request.form.get('direccion'), id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for('mostrar_configuracion'))
+
+@app.route('/configuracion/categoria/editar/<int:id>', methods=['POST'])
+def editar_categoria(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE categorias SET nombre=%s, descripcion=%s WHERE id=%s", 
+                   (request.form.get('nombre'), request.form.get('descripcion'), id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for('mostrar_configuracion'))
+
+@app.route('/configuracion/metodo/editar/<int:id>', methods=['POST'])
+def editar_metodo(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE metodos_pago_lista SET nombre=%s, descripcion=%s WHERE id=%s", 
+                   (request.form.get('nombre'), request.form.get('descripcion'), id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for('mostrar_configuracion'))
+
 # ----------------------------------------------------------------
 # RUTAS DE LOGIN / AUTENTICACIÓN
 # ----------------------------------------------------------------
