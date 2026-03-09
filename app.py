@@ -1037,29 +1037,19 @@ def instalar_kardex():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # 1. Crear la tabla si no existe
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS movimientos_inventario (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            producto_id INT NOT NULL,
-            usuario_id INT,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            tipo_movimiento VARCHAR(50),
-            cantidad DECIMAL(10,2),
-            saldo_resultante DECIMAL(10,2),
-            documento_referencia VARCHAR(100)
-        )
-        """)
-        # 2. Agregar columnas por si la tabla ya existía de antes (ignorará el error si ya existen)
+        # Ya sabemos que la tabla existe, así que solo agregamos/modificamos las columnas necesarias.
+        # Usamos try-except individuales para que si la columna ya se creó en un intento anterior, no colapse.
         try: cursor.execute("ALTER TABLE movimientos_inventario ADD COLUMN saldo_resultante DECIMAL(10,2)")
         except: pass
+        
         try: cursor.execute("ALTER TABLE movimientos_inventario ADD COLUMN documento_referencia VARCHAR(100)")
         except: pass
+        
         try: cursor.execute("ALTER TABLE movimientos_inventario MODIFY COLUMN cantidad DECIMAL(10,2)")
         except: pass
         
         conn.commit()
-        return "<h2 style='color:green;'>¡Base de datos del Kardex instalada/actualizada con éxito!</h2><br><a href='/inventario'>Volver al Inventario</a>"
+        return "<h2 style='color:green;'>¡Base de datos del Kardex actualizada con éxito!</h2><br><a href='/inventario'>Volver al Inventario</a>"
     except Exception as e:
         return f"<h2 style='color:red;'>Error al instalar: {str(e)}</h2>"
     finally:
