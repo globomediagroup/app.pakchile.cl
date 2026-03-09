@@ -15,6 +15,9 @@
     productosBase: {{ productos | tojson | safe }},
     clientesBase: {{ clientes | tojson | safe }},
     
+    // NUEVO: Pasamos los métodos de pago desde Python a Javascript
+    metodosBase: {{ metodos | tojson | safe }},
+    
     init() {
         if (this.lineas.length === 0) {
             this.agregarLinea();
@@ -68,7 +71,9 @@
 
     /* LÓGICA DE PAGOS */
     agregarPago() {
-        this.pagos.push({ id: Date.now(), metodo: "Efectivo", monto: 0, referencia: "" });
+        // Al agregar, por defecto se elige el primer método de la lista si existe
+        let metodoDefault = this.metodosBase.length > 0 ? this.metodosBase[0].nombre : "Efectivo";
+        this.pagos.push({ id: Date.now(), metodo: metodoDefault, monto: 0, referencia: "" });
     },
     eliminarPago(id) {
         if (this.pagos.length > 1) this.pagos = this.pagos.filter(p => p.id !== id);
@@ -153,16 +158,16 @@
                 </select>
             </div>
             <div>
-    <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Despacho</label>
-    <select name="despacho" x-model="despacho" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
-        <option value="Retiro Local">Retiro Local</option>
-        <option value="Starken">Starken</option>
-        <option value="Chilexpress">Chilexpress</option>
-        <option value="Bluexpress">Bluexpress</option>
-        <option value="Correos de Chile">Correos de Chile</option>
-        <option value="Transporte Propio">Transporte Propio</option>
-    </select>
-</div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase mb-1">Despacho</label>
+                <select name="despacho" x-model="despacho" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
+                    <option value="Retiro Local">Retiro Local</option>
+                    <option value="Starken">Starken</option>
+                    <option value="Chilexpress">Chilexpress</option>
+                    <option value="Bluexpress">Bluexpress</option>
+                    <option value="Correos de Chile">Correos de Chile</option>
+                    <option value="Transporte Propio">Transporte Propio</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -230,12 +235,13 @@
             <div class="space-y-3">
                 <template x-for="pago in pagos" :key="pago.id">
                     <div class="flex items-center gap-3">
+                        
                         <select x-model="pago.metodo" class="w-1/3 px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-6" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220%200%2020%2020%22%3E%3Cpath stroke=%22%236B7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E');">
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Transferencia">Transferencia</option>
-                            <option value="Tarjeta Dédito">Tarjeta Débito</option>
-                            <option value="Tarjeta Crédito">Tarjeta Crédito</option>
+                            <template x-for="m in metodosBase" :key="m.id">
+                                <option :value="m.nombre" x-text="m.nombre"></option>
+                            </template>
                         </select>
+                        
                         <div class="w-1/3 relative">
                             <span class="absolute left-3 top-2 text-gray-400">$</span>
                             <input type="number" x-model.number="pago.monto" class="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500" placeholder="0">
