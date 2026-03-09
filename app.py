@@ -224,6 +224,36 @@ def eliminar_producto(id):
     conn.close()
     return redirect(url_for('inventario'))
 
+@app.route('/inventario/movimientos')
+def historial_movimientos():
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+            SELECT m.*, p.nombre as producto_nombre, p.sku, u.nombre as usuario_nombre
+            FROM movimientos_inventario m
+            LEFT JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN usuarios u ON m.usuario_id = u.id
+            ORDER BY m.id DESC
+        """
+        cursor.execute(sql)
+        movimientos = cursor.fetchall()
+        
+        # Formatear la fecha para que se vea profesional (DD/MM/YYYY HH:MM)
+        for m in movimientos:
+            if m['fecha']:
+                m['fecha'] = m['fecha'].strftime("%d/%m/%Y %H:%M")
+                
+        return render_template('movimientos.html', movimientos=movimientos)
+    except Exception as e:
+        return f"<h1>Error al cargar Historial:</h1><p style='color:red;'>{str(e)}</p><a href='/inventario'>Volver</a>"
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.route('/cotizacion/nueva', methods=['GET', 'POST'])
 def nueva_cotizacion():
     try:
