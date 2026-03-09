@@ -18,7 +18,11 @@
             </span>
             <input type="text" x-model="busqueda" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Buscar por SKU, nombre, marca...">
         </div>
+        
         <div class="flex gap-2">
+            <a href="/inventario/movimientos" class="px-4 py-2 bg-purple-50 text-purple-600 border border-purple-200 rounded-lg text-sm font-bold hover:bg-purple-100 transition-colors flex items-center gap-2 outline-none shadow-sm">
+                <i class="fa-solid fa-clock-rotate-left"></i> Historial Kardex
+            </a>
             <button @click="modalRecepcion = true" class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 transition-all">
                 <i class="fa-solid fa-boxes-stacked"></i> Recepción
             </button>
